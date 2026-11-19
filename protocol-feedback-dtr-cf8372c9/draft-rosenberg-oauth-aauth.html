@@ -8,7 +8,7 @@
 <meta content="Jonathan Rosenberg" name="author">
 <meta content="Pat White" name="author">
 <meta content="
-       AI Agents are increasingly accessing web resources on behalf of the users they serve. Traditionally these agents are granted normal OAuth access tokens through existing OAuth grant flows. However, these flows were designed in the era of traditional software, and when applied to AI Agents, multiple problems have arisen. This document outlines some of the problems, and then proposes a simple OAuth2.1 extension that enables AI Agents to obtain access tokens at time of resource access using Human-In-the-Loop or other approval flows. We call this the Agent Authorization Grant (aauth) grant flow. The challenge that a resource server issues to trigger the flow is opaque to the agent and uses the Transaction Authorization Challenge format. This document also compares the proposed solution with another, non-backwards compatible aauth solution. 
+       AI Agents are increasingly accessing web resources on behalf of the users they serve. Traditionally these agents are granted normal OAuth access tokens through existing OAuth grant flows. However, these flows were designed in the era of traditional software, and when applied to AI Agents, multiple problems have arisen. This document outlines some of the problems, and then proposes a simple OAuth2.1 extension that enables AI Agents to obtain access tokens at time of resource access using Human-In-the-Loop or other approval flows. We call this the Agent Authorization Grant (aauth) grant flow. The challenge that a resource server issues to trigger the flow is opaque to the agent; its format is a matter between the resource server and the authorization server. This document also compares the proposed solution with another, non-backwards compatible aauth solution. 
     " name="description">
 <meta content="xml2rfc 3.35.0" name="generator">
 <meta content="next generation" name="keyword">
@@ -1083,7 +1083,7 @@ svg {
 <h1 id="title">AAuth - Agentic Authorization OAuth 2.1 Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">AI Agents are increasingly accessing web resources on behalf of the users they serve. Traditionally these agents are granted normal OAuth access tokens through existing OAuth grant flows. However, these flows were designed in the era of traditional software, and when applied to AI Agents, multiple problems have arisen. This document outlines some of the problems, and then proposes a simple OAuth2.1 extension that enables AI Agents to obtain access tokens at time of resource access using Human-In-the-Loop or other approval flows. We call this the Agent Authorization Grant (aauth) grant flow. The challenge that a resource server issues to trigger the flow is opaque to the agent and uses the Transaction Authorization Challenge format. This document also compares the proposed solution with another, non-backwards compatible aauth solution.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">AI Agents are increasingly accessing web resources on behalf of the users they serve. Traditionally these agents are granted normal OAuth access tokens through existing OAuth grant flows. However, these flows were designed in the era of traditional software, and when applied to AI Agents, multiple problems have arisen. This document outlines some of the problems, and then proposes a simple OAuth2.1 extension that enables AI Agents to obtain access tokens at time of resource access using Human-In-the-Loop or other approval flows. We call this the Agent Authorization Grant (aauth) grant flow. The challenge that a resource server issues to trigger the flow is opaque to the agent; its format is a matter between the resource server and the authorization server. This document also compares the proposed solution with another, non-backwards compatible aauth solution.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1411,12 +1411,12 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <dd class="break"></dd>
 <dt id="section-3-1.5">Resource Server (RS):</dt>
         <dd style="margin-left: 1.5em" id="section-3-1.6">
-          <p id="section-3-1.6.1">API server that protects resources via OAuth tokens. It issues Scope Challenges when a request exceeds the minimal AI Agent scope, and publishes its signing keys and scope descriptions through OAuth Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>.<a href="#section-3-1.6.1" class="pilcrow">¶</a></p>
+          <p id="section-3-1.6.1">API server that protects resources via OAuth tokens. It issues Scope Challenges when a request exceeds the minimal AI Agent scope, and publishes its scope descriptions, and whatever the AS needs to verify its challenges, through OAuth Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>.<a href="#section-3-1.6.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-3-1.7">Scope Challenge:</dt>
         <dd style="margin-left: 1.5em" id="section-3-1.8">
-          <p id="section-3-1.8.1">An integrity-protected object, generated by the RS and returned to the AI Agent when a request exceeds the minimal AI Agent scope. It conveys the access required to perform the operation and the reason it is required. It is opaque to the AI Agent, which relays it unmodified to the AS. Its format is defined by reference in <a href="#scope-challenge" class="auto internal xref">Section 5.2.1</a>.<a href="#section-3-1.8.1" class="pilcrow">¶</a></p>
+          <p id="section-3-1.8.1">An integrity-protected object, generated by the RS and returned to the AI Agent when a request exceeds the minimal AI Agent scope. It conveys the access required to perform the operation and the reason it is required. It is opaque to the AI Agent, which relays it unmodified to the AS. Its format is not defined by this specification; <a href="#scope-challenge" class="auto internal xref">Section 5.2.1</a> states what it must convey.<a href="#section-3-1.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-3-1.9">request_code:</dt>
@@ -1442,10 +1442,10 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       <h2 id="name-brief-overview-of-operation">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-brief-overview-of-operation" class="section-name selfRef">Brief Overview of Operation</a>
       </h2>
-<p id="section-4-1">This section provides a brief overview of how AAuth works. It is composed of a new grant flow, a well-defined scope, and a profile of an existing signed challenge format, the Transaction Authorization Challenge <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span>.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">This section provides a brief overview of how AAuth works. It is composed of a new grant flow, a well-defined scope, and an opaque, integrity-protected challenge.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">Firstly, an AI agent initially gets an access token through any of the existing OAuth grant flows. However - the access token is associated with a specific scope defined by this specification - "ai-agent-minimal". This scope serves two purposes - (1) it only allows the AI Agent to do a minimum set of operations which are not risky, (2) it informs the resource server that it can execute the AAuth grant flow defined here. This specification doesn't rely on any kind of new AI Agent identification.<a href="#section-4-2" class="pilcrow">¶</a></p>
-<p id="section-4-3">The AI Agent then tries to perform an operation against the resource server, for which its minimum scope is insufficient. The resource server rejects the request, and passes a signed object to the AI agent. This signed object contains the reason - in natural language - for the rejection, with enough detail for a human to decide if its allowed. The signed object also describes the access that is required - as a list of scopes, or as Rich Authorization Request authorization details <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span> that pin down the specific operation. The AI Agent treats the object as opaque.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4">The AI Agent then connects to the AS to try and obtain a token, and it passes this signed object to the AS. The AS verifies the signature, and retrieves a natural language description of the scopes from the RS. It then responds to the AI Agent - informing it that it is seeking approval. It tells the AI agent to come back later for the token, assuming the user approves. From there, the AI Agent can poll the AS for the token, or get notified via WebSocket or SSE once it is available.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-3">The AI Agent then tries to perform an operation against the resource server, for which its minimum scope is insufficient. The resource server rejects the request, and passes an integrity-protected object to the AI agent. This object contains the reason - in natural language - for the rejection, with enough detail for a human to decide if its allowed. It also describes the access that is required - as a list of scopes, or as Rich Authorization Request authorization details <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span> that pin down the specific operation. The AI Agent treats the object as opaque.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">The AI Agent then connects to the AS to try and obtain a token, and it passes this object to the AS. The AS verifies the object's integrity, and retrieves a natural language description of the scopes from the RS. It then responds to the AI Agent - informing it that it is seeking approval. It tells the AI agent to come back later for the token, assuming the user approves. From there, the AI Agent can poll the AS for the token, or get notified via WebSocket or SSE once it is available.<a href="#section-4-4" class="pilcrow">¶</a></p>
 <p id="section-4-5">The AS then seeks user approval. It can do that via out-of-band techniques like mobile push notifications, email or text. It uses the reason text - something like "The AI Agent wants to book a reservation for two at 9pm this Friday at Luigi's.", to provide the user the information they need to decide. In many cases the AS may not have an out-of-band way to connect to the user. In such a case, the AS can serve a web page which requests user approval. The AI Agent can launch a browser to this URL, allowing the user to approve (or reject). The AS can also use automated techniques -  such as an AI Agent that approves or rejects requests on the user's behalf - to determine approval.<a href="#section-4-5" class="pilcrow">¶</a></p>
 <p id="section-4-6">Once the approval has been gained, the AI Agent obtains and token (via the polling, SSE or WebSocket approaches) and then can access the resource.<a href="#section-4-6" class="pilcrow">¶</a></p>
 </section>
@@ -1484,10 +1484,8 @@ WWW-Authenticate: Bearer error="insufficient_scope",
   scope="urn:example:reservations.write",
   resource_metadata="https://api.example.com/.well-known/
     oauth-protected-resource",
-  scope_challenge="eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bi1hdXRoei1jaGFs
-    bGVuZ2Urand0Iiwia2lkIjoicnMxIn0.eyJpc3MiOiJodHRwczovL2FwaS5leGFt
-    cGxlLmNvbSIsImF1ZCI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSIs...fQ.
-    DtsKx1Q...2Qw"
+  scope_challenge="c2MtNzQ0YWQ0OWEtYjQ3ZC00OTY2LWI0ZjQtZDQ3ZGVlNjA3
+    ZTk2LjM4ZmQ1YzA3MDRiMjRjMWE5YzM5NzRmYjU2ZWQ4YjIx...Q5MzA"
 </pre>
 </div>
 <figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
@@ -1500,54 +1498,32 @@ WWW-Authenticate: Bearer error="insufficient_scope",
           <h4 id="name-the-scope-challenge">
 <a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-the-scope-challenge" class="section-name selfRef">The Scope Challenge</a>
           </h4>
-<p id="section-5.2.1-1">This specification does not define a challenge format of its own. A Scope Challenge is a Transaction Authorization Challenge as defined in <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span>: a JWT, signed by the RS with a key that the AS can discover through the RS's Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>, and relayed unmodified through the AI Agent to the AS. The claims of the challenge, the rules for validating it, the discovery of the RS's signing keys, and the associated registrations are defined by that specification and are not repeated here. Of its claims, this specification makes direct use of <code>iss</code>, <code>aud</code>, <code>exp</code>, <code>jti</code>, <code>reason</code>, and the Rich Authorization Requests <code>authorization_details</code> <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span> that describe the operation.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.2.1-2">When used with this specification, the challenge is subject to the following additional requirements:<a href="#section-5.2.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-1">This specification does not define the format of the Scope Challenge. The challenge is produced by the RS and consumed by the AS, which already share a trust relationship, and its format is a matter of agreement between them. The AI Agent <span class="bcp14">MUST</span> treat it as opaque: it <span class="bcp14">MUST NOT</span> modify it and need not parse it.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-2">Whatever format is used, the challenge <span class="bcp14">MUST</span> be integrity-protected in a way that the AS can verify without trusting the AI Agent, and <span class="bcp14">MUST</span> convey the following to the AS:<a href="#section-5.2.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.2.1-3.1">
-              <p id="section-5.2.1-3.1.1">The challenge <span class="bcp14">MUST</span> convey the access required to perform the operation. It does so through <code>authorization_details</code>, as <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span> requires, and <span class="bcp14">MAY</span> additionally carry a <code>scope</code> claim containing a space-delimited list of scopes in the format of <span><a href="https://rfc-editor.org/rfc/rfc6749#section-3.3" class="relref">Section 3.3</a> of [<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>. When both are present, the AS treats them as jointly required. Carrying <code>authorization_details</code> is <span class="bcp14">RECOMMENDED</span> for operations whose consequences depend on their parameters; see <a href="#elevated-tokens" class="auto internal xref">Section 9.10</a>.<a href="#section-5.2.1-3.1.1" class="pilcrow">¶</a></p>
+              <p id="section-5.2.1-3.1.1">The identity of the RS that produced it.<a href="#section-5.2.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.2.1-3.2">
-              <p id="section-5.2.1-3.2.1">The challenge <span class="bcp14">MUST</span> carry a <code>client_id</code> claim containing the client identifier of the AI Agent whose request was refused, as determined from the access token the AI Agent presented. This binds the challenge to the AI Agent so that a challenge obtained by one client cannot be redeemed by another.<a href="#section-5.2.1-3.2.1" class="pilcrow">¶</a></p>
+              <p id="section-5.2.1-3.2.1">The AS for which it is intended.<a href="#section-5.2.1-3.2.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.2.1-3.3">
-              <p id="section-5.2.1-3.3.1">When the access token presented to the RS was issued on behalf of a resource owner, the challenge <span class="bcp14">MUST</span> carry a <code>sub</code> claim containing the subject identifier of that resource owner, as known to the AS. This tells the AS whose approval it must obtain.<a href="#section-5.2.1-3.3.1" class="pilcrow">¶</a></p>
+              <p id="section-5.2.1-3.3.1">A validity period and a unique identifier, so that the AS can reject expired and replayed challenges. The validity period <span class="bcp14">SHOULD</span> be short - five minutes is <span class="bcp14">RECOMMENDED</span> - since it bounds only the time the AI Agent has to present the challenge to the AS, not the time available for approval.<a href="#section-5.2.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.2.1-3.4">
-              <p id="section-5.2.1-3.4.1">The <code>aud</code> claim <span class="bcp14">MUST</span> be the issuer identifier <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> of the AS.<a href="#section-5.2.1-3.4.1" class="pilcrow">¶</a></p>
+              <p id="section-5.2.1-3.4.1">The client identifier of the AI Agent whose request was refused, as determined from the access token the AI Agent presented. This binds the challenge to the AI Agent, so that a challenge obtained by one client cannot be redeemed by another.<a href="#section-5.2.1-3.4.1" class="pilcrow">¶</a></p>
 </li>
             <li class="normal" id="section-5.2.1-3.5">
-              <p id="section-5.2.1-3.5.1">The <code>reason</code> <span class="bcp14">MUST</span> follow the content guidance of <a href="#reason-guidance" class="auto internal xref">Section 5.2.1.1</a>.<a href="#section-5.2.1-3.5.1" class="pilcrow">¶</a></p>
+              <p id="section-5.2.1-3.5.1">When that access token was issued on behalf of a resource owner, the subject identifier of that resource owner, as known to the AS. This tells the AS whose approval it must obtain.<a href="#section-5.2.1-3.5.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-5.2.1-3.6">
+              <p id="section-5.2.1-3.6.1">The access required to perform the operation: a list of scopes in the format of <span><a href="https://rfc-editor.org/rfc/rfc6749#section-3.3" class="relref">Section 3.3</a> of [<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>, Rich Authorization Requests <code>authorization_details</code> <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span>, or both. When both are present, the AS treats them as jointly required. Conveying <code>authorization_details</code> is <span class="bcp14">RECOMMENDED</span> for operations whose consequences depend on their parameters; see <a href="#elevated-tokens" class="auto internal xref">Section 9.10</a>.<a href="#section-5.2.1-3.6.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-5.2.1-3.7">
+              <p id="section-5.2.1-3.7.1">The reason, following the content guidance of <a href="#reason-guidance" class="auto internal xref">Section 5.2.1.1</a>.<a href="#section-5.2.1-3.7.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-5.2.1-4">The AI Agent <span class="bcp14">MUST</span> treat the challenge as opaque: it <span class="bcp14">MUST NOT</span> modify it and need not parse it. An AI Agent <span class="bcp14">MAY</span> inspect the challenge in order to decide whether to proceed, as <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span> permits.<a href="#section-5.2.1-4" class="pilcrow">¶</a></p>
-<p id="section-5.2.1-5">The claims of a challenge for the example above, decoded, are:<a href="#section-5.2.1-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-5.2.1-6">
-<pre>
-{
-  "iss": "https://api.example.com",
-  "aud": "https://auth.example.com",
-  "iat": 1793469600,
-  "exp": 1793469900,
-  "jti": "9f1c2e3a-4b5d-4e6f-8a9b-0c1d2e3f4a5b",
-  "txn": "3b0f6c2e-7f19-4d1a-9c5e-2a8f1d4e6b70",
-  "client_id": "reservebot",
-  "sub": "248289761001",
-  "scope": "urn:example:reservations.write",
-  "authorization_details": [
-    {
-      "type": "urn:example:reservation",
-      "actions": ["create"],
-      "restaurant": "Joe's Italian",
-      "party_size": 2,
-      "datetime": "2026-11-20T21:00:00-05:00"
-    }
-  ],
-  "reason": "ReserveBot wants to book a table for two at Joe's
-             Italian on Friday at 9pm."
-}
-</pre><a href="#section-5.2.1-6" class="pilcrow">¶</a>
-</div>
-<p id="section-5.2.1-7">OPEN ISSUE: <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span> conveys its challenge in a 401 response with a <code>transaction_authorization_required</code> error and a <code>transaction_challenge</code> auth-param, and requires the client to signal its support with an <code>Accept-Txn-Challenge</code> request header. This specification conveys the same challenge in a 403 response with <code>insufficient_scope</code> and <code>scope_challenge</code>, and uses the minimal AI Agent scope as the signal that the client supports being challenged. The authors intend to align the two and welcome feedback on which transport should prevail.<a href="#section-5.2.1-7" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-4">The challenge <span class="bcp14">MAY</span> convey additional information for the AS's use. <a href="#related-txn" class="auto internal xref">Section 8.1</a> describes an existing format that can carry all of the above.<a href="#section-5.2.1-4" class="pilcrow">¶</a></p>
 <div id="reason-guidance">
 <section id="section-5.2.1.1">
             <h5 id="name-content-of-the-reason">
@@ -1577,10 +1553,8 @@ Content-Type: application/x-www-form-urlencoded
 Authorization: Basic &lt;base64(client_id:client_secret)&gt;
 
 grant_type=urn:ietf:params:oauth:grant-type:agent_authorization
-&amp;scope_challenge=eyJhbGciOiJFUzI1NiIsInR5cCI6InR4bi1hdXRoei1jaGFs
-bGVuZ2Urand0Iiwia2lkIjoicnMxIn0.eyJpc3MiOiJodHRwczovL2FwaS5leGFt
-cGxlLmNvbSIsImF1ZCI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSIs...fQ.
-DtsKx1Q...2Qw
+&amp;scope_challenge=c2MtNzQ0YWQ0OWEtYjQ3ZC00OTY2LWI0ZjQtZDQ3ZGVlNjA3
+ZTk2LjM4ZmQ1YzA3MDRiMjRjMWE5YzM5NzRmYjU2ZWQ4YjIx...Q5MzA
 &amp;timeout=300
 </pre>
 </div>
@@ -1633,22 +1607,25 @@ DtsKx1Q...2Qw
           <h4 id="name-validating-the-scope-challe">
 <a href="#section-5.4.1" class="section-number selfRef">5.4.1. </a><a href="#name-validating-the-scope-challe" class="section-name selfRef">Validating the Scope Challenge</a>
           </h4>
-<p id="section-5.4.1-1">The AS then validates the Scope Challenge as specified in <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span>: it locates the RS's Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> from the challenge's issuer, obtains the RS's challenge signing keys through that metadata, verifies the signature, and checks the audience, the expiration time, and the unique identifier. The AS <span class="bcp14">SHOULD</span> cache the metadata and keys in accordance with the HTTP caching directives they are served with, and <span class="bcp14">MAY</span> re-fetch the keys when it encounters an unrecognized key identifier, subject to rate limiting (<a href="#sec-dos" class="auto internal xref">Section 9.8</a>).<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.4.1-2">In addition, the AS <span class="bcp14">MUST</span> perform the following checks. If any of them fails, the AS <span class="bcp14">MUST</span> reject the request with an <code>invalid_scope_challenge</code> error (<a href="#errors" class="auto internal xref">Section 5.7</a>), except where another error code is stated.<a href="#section-5.4.1-2" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-5.4.1-3">
-<li id="section-5.4.1-3.1">
-              <p id="section-5.4.1-3.1.1">The issuer <span class="bcp14">MUST</span> identify a resource server that the AS is configured to issue tokens for. The AS <span class="bcp14">MUST NOT</span> process challenges from resource servers it does not recognize; see <a href="#sec-challenge" class="auto internal xref">Section 9.3</a>.<a href="#section-5.4.1-3.1.1" class="pilcrow">¶</a></p>
+<p id="section-5.4.1-1">The AS then validates the Scope Challenge according to the format in use between it and the RS. Whatever the format, the AS <span class="bcp14">MUST</span> establish all of the following before proceeding. If any cannot be established, the AS <span class="bcp14">MUST</span> reject the request with an <code>invalid_scope_challenge</code> error (<a href="#errors" class="auto internal xref">Section 5.7</a>), except where another error code is stated.<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.4.1-2">
+<li id="section-5.4.1-2.1">
+              <p id="section-5.4.1-2.1.1">The challenge was produced by a resource server that the AS is configured to issue tokens for, and its integrity is intact. The AS <span class="bcp14">MUST NOT</span> process challenges from resource servers it does not recognize; see <a href="#sec-challenge" class="auto internal xref">Section 9.3</a>.<a href="#section-5.4.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-5.4.1-3.2">
-              <p id="section-5.4.1-3.2.1">The <code>client_id</code> claim <span class="bcp14">MUST</span> match the identifier of the authenticated client.<a href="#section-5.4.1-3.2.1" class="pilcrow">¶</a></p>
+            <li id="section-5.4.1-2.2">
+              <p id="section-5.4.1-2.2.1">The challenge is intended for this AS, and is within its validity period.<a href="#section-5.4.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-5.4.1-3.3">
-              <p id="section-5.4.1-3.3.1">The <code>jti</code> claim <span class="bcp14">MUST NOT</span> have been accepted previously. The AS <span class="bcp14">MUST</span> retain the <code>jti</code> values it has accepted at least until the corresponding <code>exp</code> times have passed. This prevents an AI Agent from using a single challenge to initiate multiple approval requests.<a href="#section-5.4.1-3.3.1" class="pilcrow">¶</a></p>
+            <li id="section-5.4.1-2.3">
+              <p id="section-5.4.1-2.3.1">The challenge identifies the authenticated client as the AI Agent whose request was refused.<a href="#section-5.4.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-5.4.1-3.4">
-              <p id="section-5.4.1-3.4.1">The AS <span class="bcp14">MUST</span> be willing, under its own policy, to grant the access the challenge requests - each scope in <code>scope</code> and each element of <code>authorization_details</code> - to this client for this resource server. If it is not, it <span class="bcp14">MUST</span> reject the request with an <code>invalid_scope</code> error or, when the refused element is in <code>authorization_details</code>, an <code>invalid_authorization_details</code> error (<span><a href="https://rfc-editor.org/rfc/rfc9396#section-5" class="relref">Section 5</a> of [<a href="#RFC9396" class="cite xref">RFC9396</a>]</span>).<a href="#section-5.4.1-3.4.1" class="pilcrow">¶</a></p>
+            <li id="section-5.4.1-2.4">
+              <p id="section-5.4.1-2.4.1">The challenge has not been accepted previously. The AS <span class="bcp14">MUST</span> retain the identifiers of the challenges it has accepted at least until their validity periods have passed. This prevents an AI Agent from using a single challenge to initiate multiple approval requests.<a href="#section-5.4.1-2.4.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.4.1-2.5">
+              <p id="section-5.4.1-2.5.1">The AS <span class="bcp14">MUST</span> be willing, under its own policy, to grant the access the challenge requests - each scope in <code>scope</code> and each element of <code>authorization_details</code> - to this client for this resource server. If it is not, it <span class="bcp14">MUST</span> reject the request with an <code>invalid_scope</code> error or, when the refused element is in <code>authorization_details</code>, an <code>invalid_authorization_details</code> error (<span><a href="https://rfc-editor.org/rfc/rfc9396#section-5" class="relref">Section 5</a> of [<a href="#RFC9396" class="cite xref">RFC9396</a>]</span>).<a href="#section-5.4.1-2.5.1" class="pilcrow">¶</a></p>
 </li>
           </ol>
+<p id="section-5.4.1-3">Where verifying a challenge requires the AS to fetch the RS's metadata or keys, the AS <span class="bcp14">SHOULD</span> cache them in accordance with the HTTP caching directives they are served with, subject to the rate limiting of <a href="#sec-dos" class="auto internal xref">Section 9.8</a>.<a href="#section-5.4.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="obtaining-scope-descriptions">
@@ -2276,7 +2253,7 @@ Authorization: Basic &lt;base64(client_id:client_secret)&gt;
 <p id="section-6.2-1">A resource server that supports this specification publishes OAuth Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> at the well-known location derived from its resource identifier. In that metadata, the RS:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2-2.1">
-            <p id="section-6.2-2.1.1"><span class="bcp14">MUST</span> include the members that <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span> defines for locating the keys and algorithms used to sign challenges.<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-2.1.1"><span class="bcp14">MUST</span> publish whatever the AS needs to verify its Scope Challenges, as required by the challenge format in use (for example, a JWK Set for a signed format).<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-2.2">
             <p id="section-6.2-2.2.1"><span class="bcp14">SHOULD</span> include <code>authorization_servers</code>, listing the authorization servers for which it issues Scope Challenges. The AS <span class="bcp14">SHOULD</span> verify that it is listed.<a href="#section-6.2-2.2.1" class="pilcrow">¶</a></p>
@@ -2309,7 +2286,7 @@ Authorization: Basic &lt;base64(client_id:client_secret)&gt;
 <p id="section-7-1">This specification shares the name aauth with <span>[<a href="#I-D.hardt-oauth-aauth-protocol" class="cite xref">I-D.hardt-oauth-aauth-protocol</a>]</span>, but differs significantly in its approach.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <p id="section-7-2">Both documents are aimed at solving the same core issue - how to grant AI Agents access tokens, doing so securely and potentially involving human approvals. Both have the idea of a minimal baseline access, both deliver tokens to the AI Agent once some kind of approval has been performed, both have the idea of scope descriptions, both use short lived tokens.<a href="#section-7-2" class="pilcrow">¶</a></p>
 <p id="section-7-3">The biggest difference however - is on relationship to OAuth. This specification is an extension to OAuth, whereas the Hardt draft is a full-on replacement. The authors believe a faster path to deployment is by riding on the success and widespread deployment of OAuth.<a href="#section-7-3" class="pilcrow">¶</a></p>
-<p id="section-7-4">The protocols also differ in size and complexity. This document is more narrow, defining a new grant flow, a well-known scope, and a profile of an existing signed challenge format. The Hardt draft brings its own agent identity, uses HTTP message signatures, defines new token types, new roles, and introduces the concepts of missions, delegation and federation. Since it depends on HTTP Message Signatures <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, it requires that technology to be co-deployed throughout the impacted web infrastructure along with the new AAuth protocol.<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-4">The protocols also differ in size and complexity. This document is more narrow, defining a new grant flow, a well-known scope, and an opaque, integrity-protected challenge. The Hardt draft brings its own agent identity, uses HTTP message signatures, defines new token types, new roles, and introduces the concepts of missions, delegation and federation. Since it depends on HTTP Message Signatures <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, it requires that technology to be co-deployed throughout the impacted web infrastructure along with the new AAuth protocol.<a href="#section-7-4" class="pilcrow">¶</a></p>
 <p id="section-7-5">An important technical difference is on who writes the text that the human sees to perform approvals. In this spec, it is written by the RS, and it is written per operation. This allows for highly targeted, per API decision making - e.g., "approve my AI Agent to book a table for two at Joe's Italian on Friday at 9pm". Only the RS can author this level of specificity. In addition, because the text is written by the RS, and not the AS, it reduces the trust required of the AI Agent. Indeed, this specification provides cryptographic protections which ensure that the AI Agent cannot manipulate, generate, or alter this reason text in any way. The authors of this document believe that it is paramount that we do NOT rely on AI Agents for asserting their own reasons for operations when seeking to gain human approval for them.<a href="#section-7-5" class="pilcrow">¶</a></p>
 <p id="section-7-6">By contrast, in the Hardt protocol, the text is written by the agent, as a justification document. This requires a higher level of trust on the AI Agent, and is also not operation specific. The Hardt draft does allow for scope descriptions (similar to this document). However, these are not operation specific.<a href="#section-7-6" class="pilcrow">¶</a></p>
 </section>
@@ -2319,12 +2296,13 @@ Authorization: Basic &lt;base64(client_id:client_secret)&gt;
       <h2 id="name-relationship-to-other-work">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-relationship-to-other-work" class="section-name selfRef">Relationship to Other Work</a>
       </h2>
-<div id="transaction-authorization-challenge">
+<div id="related-txn">
 <section id="section-8.1">
         <h3 id="name-transaction-authorization-c">
 <a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-transaction-authorization-c" class="section-name selfRef">Transaction Authorization Challenge</a>
         </h3>
-<p id="section-8.1-1"><span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span> defines the challenge format that this specification uses, and its own endpoint at which a client presents a challenge and polls for the token. The two documents share the central idea: the RS, not the agent, writes the integrity-protected description of the operation that the resource owner approves. This specification adds the minimal AI Agent scope, the agent-supplied timeout, status codes that let the agent act without parsing response bodies, and push delivery over SSE and WebSocket. See the open issue in <a href="#scope-challenge" class="auto internal xref">Section 5.2.1</a> on aligning the two transports.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-1"><span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span> defines a Transaction Authorization Challenge: a JWT signed by the RS, carrying the RS and AS identities, a validity period, a unique identifier, a <code>reason</code>, and RAR <code>authorization_details</code>, that the agent relays unmodified to the AS. It is one format that an RS and AS can agree to use as the Scope Challenge; it meets the requirements of <a href="#scope-challenge" class="auto internal xref">Section 5.2.1</a> once the RS adds claims identifying the client and the resource owner. That draft also defines its own endpoint at which a client presents a challenge and polls for the token. The two documents share the central idea: the RS, not the agent, writes the integrity-protected description of the operation that the resource owner approves. This specification adds the minimal AI Agent scope, the agent-supplied timeout, status codes that let the agent act without parsing response bodies, and push delivery over SSE and WebSocket.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-2">OPEN ISSUE: <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span> conveys its challenge in a 401 response with a <code>transaction_authorization_required</code> error and a <code>transaction_challenge</code> auth-param, and requires the client to signal its support with an <code>Accept-Txn-Challenge</code> request header. This specification conveys the challenge in a 403 response with <code>insufficient_scope</code> and <code>scope_challenge</code>, and uses the minimal AI Agent scope as the signal that the client supports being challenged. Whether an RS should support both transports, and whether they should be aligned, is open.<a href="#section-8.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="rich-authorization-requests">
@@ -2385,9 +2363,9 @@ Authorization: Basic &lt;base64(client_id:client_secret)&gt;
         <h3 id="name-preventing-malicious-ai-age">
 <a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-preventing-malicious-ai-age" class="section-name selfRef">Preventing Malicious AI Agents from Altering Reasons and Scopes</a>
         </h3>
-<p id="section-9.3-1">The reason and the required access are the information on which the resource owner bases their decision. If an AI Agent could alter either, it could obtain approval for one action while presenting another - for example, by pairing a benign reason with broader access. This specification does not trust the AI Agent to pass these unaltered. As a result, it relies on the signature over the Scope Challenge defined by <span>[<a href="#I-D.rosomakho-oauth-txn-challenge" class="cite xref">I-D.rosomakho-oauth-txn-challenge</a>]</span>, and on the AS validating that signature before using any claim.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
-<p id="section-9.3-2">The signature is made with a key published by the RS and verified by the AS, and requires no trust in the AI Agent. This ensures the AI Agent cannot manipulate keying material to adjust signatures.<a href="#section-9.3-2" class="pilcrow">¶</a></p>
-<p id="section-9.3-3">The signature covers the reason and the required access together, not just one of them alone. This prevents an attack wherein a malicious AI Agent could modify the scopes or authorization details to be larger, with a reason that seems to imply lesser access.<a href="#section-9.3-3" class="pilcrow">¶</a></p>
+<p id="section-9.3-1">The reason and the required access are the information on which the resource owner bases their decision. If an AI Agent could alter either, it could obtain approval for one action while presenting another - for example, by pairing a benign reason with broader access. This specification does not trust the AI Agent to pass these unaltered. As a result, it relies on the integrity protection of the Scope Challenge, which the AS <span class="bcp14">MUST</span> verify before using any of its contents.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
+<p id="section-9.3-2">The integrity protection relies on keys or secrets shared between the RS and the AS, and requires no trust in the AI Agent. This ensures the AI Agent cannot manipulate keying material to forge or alter challenges.<a href="#section-9.3-2" class="pilcrow">¶</a></p>
+<p id="section-9.3-3">The integrity protection <span class="bcp14">MUST</span> cover the reason and the required access together, not just one of them alone. This prevents an attack wherein a malicious AI Agent could modify the scopes or authorization details to be larger, with a reason that seems to imply lesser access.<a href="#section-9.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="preventing-malicious-ai-agents-from-tricking-the-as-or-rs">
@@ -2396,7 +2374,7 @@ Authorization: Basic &lt;base64(client_id:client_secret)&gt;
 <a href="#section-9.4" class="section-number selfRef">9.4. </a><a href="#name-preventing-malicious-ai-agen" class="section-name selfRef">Preventing Malicious AI Agents from Tricking the AS or RS</a>
         </h3>
 <p id="section-9.4-1">A potential attack from a malicious AI Agent is one in which it colludes with a malicious AS in order to obtain tokens which can be used against an RS it wishes to access. Similarly, a malicous AI Agent might try to fool a legitimate AS into issuing tokens by creating its own scope challenges, and getting the AS to sign them.<a href="#section-9.4-1" class="pilcrow">¶</a></p>
-<p id="section-9.4-2">This is preventing by requiring that the AS only accept Scope Challenges from resource servers it is configured to serve. Similarly, the <code>client_id</code> claim binds the challenge to the AI Agent that encountered the refusal, so that a challenge obtained by one client cannot be redeemed by another. The <code>sub</code> claim binds it to the resource owner whose token was presented, so that an AI Agent cannot cause a different resource owner to be prompted. The <code>jti</code> claim and the short <code>exp</code> prevent a single challenge from being used to generate repeated approval prompts.<a href="#section-9.4-2" class="pilcrow">¶</a></p>
+<p id="section-9.4-2">This is preventing by requiring that the AS only accept Scope Challenges from resource servers it is configured to serve. Similarly, the client identifier in the challenge binds it to the AI Agent that encountered the refusal, so that a challenge obtained by one client cannot be redeemed by another. The subject identifier binds it to the resource owner whose token was presented, so that an AI Agent cannot cause a different resource owner to be prompted. The unique identifier and the short validity period prevent a single challenge from being used to generate repeated approval prompts.<a href="#section-9.4-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="sec-request-code">
@@ -2471,8 +2449,8 @@ token delivered in a token endpoint response can be bound to a DPoP proof <span>
         </h3>
 <p id="section-9.8-1">Because this specification makes use of polling, the AS needs to take steps to make sure it doesnt subject itself to a self-inflicted DoS attack. But more importantly, it needs to make sure it doesnt generate a flood of approvals to the human user.<a href="#section-9.8-1" class="pilcrow">¶</a></p>
 <p id="section-9.8-2">The AS <span class="bcp14">SHOULD</span> rate-limit polling and push connections per client, returning 429 as described in <a href="#errors" class="auto internal xref">Section 5.7</a>. It <span class="bcp14">SHOULD</span> limit the number of simultaneous push connections per client and per request_code.<a href="#section-9.8-2" class="pilcrow">¶</a></p>
-<p id="section-9.8-3">Validation of a Scope Challenge may cause the AS to fetch an RS's metadata and JWK Set. The AS <span class="bcp14">SHOULD</span> cache these, and <span class="bcp14">SHOULD</span> rate-limit re-fetches triggered by unrecognized <code>kid</code> values, so that an AI Agent cannot cause the AS to make unbounded outbound requests.<a href="#section-9.8-3" class="pilcrow">¶</a></p>
-<p id="section-9.8-4">To avoid flooding the user, the AS <span class="bcp14">MUST</span> limit the number of outstanding approval requests per combination of client (the AI Agent) and per resource owner (the user). The <code>jti</code> of the Scope Challenge ensures that each challenge can create at most one request.<a href="#section-9.8-4" class="pilcrow">¶</a></p>
+<p id="section-9.8-3">Validation of a Scope Challenge may cause the AS to fetch an RS's metadata or keys. The AS <span class="bcp14">SHOULD</span> cache these, and <span class="bcp14">SHOULD</span> rate-limit re-fetches triggered by unrecognized key identifiers, so that an AI Agent cannot cause the AS to make unbounded outbound requests.<a href="#section-9.8-3" class="pilcrow">¶</a></p>
+<p id="section-9.8-4">To avoid flooding the user, the AS <span class="bcp14">MUST</span> limit the number of outstanding approval requests per combination of client (the AI Agent) and per resource owner (the user). The unique identifier of the Scope Challenge ensures that each challenge can create at most one request.<a href="#section-9.8-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="sec-scope-descriptions">
@@ -2670,10 +2648,6 @@ token delivered in a token endpoint response can be bound to a DPoP proof <span>
         <dd>
 <span class="refAuthor">Wright, A.</span>, <span class="refAuthor">Andrews, H. H.</span>, <span class="refAuthor">Hutton, B.</span>, and <span class="refAuthor">G. Dennis</span>, <span class="refTitle">"JSON Schema: A Media Type for Describing JSON Documents"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-bhutton-json-schema-01</span>, <time datetime="2022-06-10" class="refDate">10 June 2022</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-01">https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-01</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="I-D.rosomakho-oauth-txn-challenge">[I-D.rosomakho-oauth-txn-challenge]</dt>
-        <dd>
-<span class="refAuthor">Rosomakho, Y.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">McGuinness, K.</span>, and <span class="refAuthor">P. Kasselman</span>, <span class="refTitle">"OAuth Transaction Authorization Challenge"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-rosomakho-oauth-txn-challenge-01</span>, <time datetime="2026-11-02" class="refDate">2 November 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-rosomakho-oauth-txn-challenge-01">https://datatracker.ietf.org/doc/html/draft-rosomakho-oauth-txn-challenge-01</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
         <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
@@ -2770,6 +2744,10 @@ token delivered in a token endpoint response can be bound to a DPoP proof <span>
 <dt id="I-D.ietf-wimse-wpt">[I-D.ietf-wimse-wpt]</dt>
         <dd>
 <span class="refAuthor">Campbell, B.</span> and <span class="refAuthor">A. Schwenkschuster</span>, <span class="refTitle">"WIMSE Workload Proof Token"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-wimse-wpt-02</span>, <time datetime="2026-08-27" class="refDate">27 August 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-wimse-wpt-02">https://datatracker.ietf.org/doc/html/draft-ietf-wimse-wpt-02</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.rosomakho-oauth-txn-challenge">[I-D.rosomakho-oauth-txn-challenge]</dt>
+        <dd>
+<span class="refAuthor">Rosomakho, Y.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">McGuinness, K.</span>, and <span class="refAuthor">P. Kasselman</span>, <span class="refTitle">"OAuth Transaction Authorization Challenge"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-rosomakho-oauth-txn-challenge-01</span>, <time datetime="2026-11-02" class="refDate">2 November 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-rosomakho-oauth-txn-challenge-01">https://datatracker.ietf.org/doc/html/draft-rosomakho-oauth-txn-challenge-01</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="OIDC">[OIDC]</dt>
         <dd>
